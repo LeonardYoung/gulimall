@@ -1,7 +1,10 @@
 package com.yangsj.gulimall.product.controller;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -31,14 +34,18 @@ public class CategoryController {
     private CategoryService categoryService;
 
     /**
-     * 列表
+     * 查出所有分类以及子分类，以树形结构组装起来
      */
-    @RequestMapping("/list")
+    @RequestMapping("/list/tree")
     //@RequiresPermissions("product:category:list")
-    public R list(@RequestParam Map<String, Object> params){
-        PageUtils page = categoryService.queryPage(params);
+    public R list(){
+//        HashMap hashMap = new HashMap();
+//        hashMap.put(com.yangsj.common.utils.Constant.PAGE,"1");
+//        hashMap.put(com.yangsj.common.utils.Constant.LIMIT,"10");
+//        PageUtils page = categoryService.queryPage(hashMap);
+        List<CategoryEntity> entities = categoryService.listWithTree();
 
-        return R.ok().put("page", page);
+        return R.ok().put("data", entities);
     }
 
 
@@ -79,10 +86,8 @@ public class CategoryController {
      * 删除
      */
     @RequestMapping("/delete")
-    //@RequiresPermissions("product:category:delete")
     public R delete(@RequestBody Long[] catIds){
-		categoryService.removeByIds(Arrays.asList(catIds));
-
+        categoryService.removeMenusByids(Arrays.asList(catIds));
         return R.ok();
     }
 
