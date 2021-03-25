@@ -1,5 +1,6 @@
 package com.yangsj.gulimall.product.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.yangsj.gulimall.product.dao.AttrAttrgroupRelationDao;
 import com.yangsj.gulimall.product.dao.AttrGroupDao;
@@ -7,6 +8,7 @@ import com.yangsj.gulimall.product.dao.CategoryDao;
 import com.yangsj.gulimall.product.entity.AttrAttrgroupRelationEntity;
 import com.yangsj.gulimall.product.entity.AttrGroupEntity;
 import com.yangsj.gulimall.product.entity.CategoryEntity;
+import com.yangsj.gulimall.product.service.CategoryService;
 import com.yangsj.gulimall.product.vo.AttrRespVo;
 import com.yangsj.gulimall.product.vo.AttrVo;
 import org.springframework.beans.BeanUtils;
@@ -40,6 +42,9 @@ public class AttrServiceImpl extends ServiceImpl<AttrDao, AttrEntity> implements
     private AttrGroupDao attrGroupDao;
     @Autowired
     private CategoryDao categoryDao;
+
+    @Autowired
+    private CategoryService categoryService;
 
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
@@ -113,6 +118,49 @@ public class AttrServiceImpl extends ServiceImpl<AttrDao, AttrEntity> implements
 
         pageUtils.setList(respVos);
         return pageUtils;
+    }
+
+    @Override
+    public AttrRespVo getAttrInfo(Long attrId) {
+        AttrEntity attrEntity = this.getById(attrId);
+        AttrRespVo attrRespVo = new AttrRespVo();
+        BeanUtils.copyProperties(attrEntity,attrRespVo);
+
+        AttrAttrgroupRelationEntity  attrAttrgroupRelationEntity = this.relationDao.selectOne(
+                new QueryWrapper<AttrAttrgroupRelationEntity>().eq("attr_id",attrEntity.getAttrId()));
+        if(attrAttrgroupRelationEntity!=null && attrAttrgroupRelationEntity.getAttrGroupId() != null){
+            Long id = attrAttrgroupRelationEntity.getAttrGroupId();
+            attrRespVo.setAttrGroupId(id);
+            AttrGroupEntity attrGroupEntity = this.attrGroupDao.selectOne(
+                    new QueryWrapper<AttrGroupEntity>().eq("attr_group_id",id));
+            if(attrGroupEntity != null && attrGroupEntity.getAttrGroupName() != null){
+                attrRespVo.setGroupName(attrGroupEntity.getAttrGroupName());
+            }
+        }
+
+
+        Long catelogId = attrEntity.getCatelogId();
+        Long[] cateLogPath = categoryService.findCateLogPath(catelogId);
+        attrRespVo.setCatelogPath(cateLogPath);
+
+        CategoryEntity categoryEntity = categoryDao.selectById(catelogId);
+        if(categoryEntity != null && categoryEntity.getName() != null){
+            attrRespVo.setCatelogName(categoryEntity.getName());
+        }
+
+        return attrRespVo;
+    }
+
+    @Override
+    public void updateAttr(AttrVo attrVo) {
+        AttrEntity attrEntity = new AttrEntity();
+        BeanUtils.copyProperties(attrVo,attrEntity);
+        this.updateById(attrEntity);
+
+        AttrAttrgroupRelationEntity relationEntity = new AttrAttrgroupRelationEntity();
+        relationEntity.setAttrId(attrEntity.getAttrId());
+        relationEntity.setAttrGroupId(attrVo.getAttrGroupId());
+        this.relationDao.update(relationEntity,new UpdateWrapper<AttrAttrgroupRelationEntity>().eq("attr_id",attrEntity.getAttrId()));
     }
 
 }
