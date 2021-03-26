@@ -1,6 +1,7 @@
 package com.yangsj.gulimall.product.controller;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 import com.yangsj.gulimall.product.vo.AttrRespVo;
@@ -28,11 +29,15 @@ public class AttrController {
     @Autowired
     private AttrService attrService;
 
+    ///product/attrgroup/{attrgroupId}/attr/relation
 
-    @GetMapping("/base/list/{catelogId}")
+
+
+    @GetMapping("/{attrType}/list/{catelogId}")
     public R baselist(@RequestParam Map<String, Object> params,
-                      @PathVariable("catelogId") Long catelogId){
-        PageUtils page = attrService.queryBaseAttrPage(params,catelogId);
+                      @PathVariable("catelogId") Long catelogId,
+                      @PathVariable("attrType") String attrType){
+        PageUtils page = attrService.queryBaseAttrPage(params,catelogId,attrType);
 
         return R.ok().put("page",page);
     }
